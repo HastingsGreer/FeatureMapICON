@@ -1,34 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-
-
-
-# In[93]:
-
-
-# This cell contains the code from %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# that defines the functions compute_warped_image_multiNC
-# which we use for composing maps and identity_map_multiN which we use
-# to get an identity map. 
-import torch
-from torch.autograd import Function
-from torch.nn import Module
-def show(x):
-    while len(x.shape) > 2:
-        x = x[0]
-    plt.imshow(x.detach().cpu())
-    #plt.show()
-
-
-# In[94]:
-
-
-#First, we download the MNIST dataset and store it as a dataset we can train against.
-
+import footsteps
+import scipy.ndimage
+import scipy.ndimage.measurements
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -36,6 +8,12 @@ import numpy as np
 import torchvision
 import matplotlib.pyplot as plt
 import torch.optim as optim
+from torch.autograd import Function
+from torch.nn import Module
+def show(x):
+    while len(x.shape) > 2:
+        x = x[0]
+    plt.imshow(x.detach().cpu())
 
 def get_dataset(split):
     ds = torch.utils.data.DataLoader(
@@ -58,9 +36,6 @@ def get_dataset(split):
     return d1, d2
 d1_mnist, d2_mnist = get_dataset("train")
 d1_mnist_test, d2_mnist_test = get_dataset("test")
-
-
-# In[131]:
 
 
 N = 28
@@ -101,14 +76,6 @@ def get_dataset_triangles(split):
 d1_triangles, d2_triangles = get_dataset_triangles("train")
 d1_triangles_test, d2_triangles_test = get_dataset_triangles("test")
 
-
-# In[237]:
-
-
-#Next, we define the neural network architectures that we will pair with our
-#inverse consistency loss
-    
-    
 class RegisNetNoPad(nn.Module):
     def __init__(self):
         super(RegisNetNoPad, self).__init__()
@@ -135,136 +102,6 @@ class RegisNetNoPad(nn.Module):
         #out = out / (out_norms + .0001)
         
         return out * 10
-
-
-# In[238]:
-
-
-net = RegisNetNoPad()
-
-
-# In[278]:
-
-
-A = list(d1_triangles)[0][0][:1]
-B = list(d1_triangles)[1][0][:1]
-plt.subplot(1, 2, 1)
-show(B)
-plt.subplot(1, 2, 2)
-show(A)
-plt.show()
-
-
-# In[266]:
-
-
-net.cpu()
-
-
-# In[267]:
-
-
-for i in range(30):
-    plt.subplot(5, 6, i + 1)
-    plt.xticks([])
-    plt.yticks([])
-    show(net(A)[0, i])
-    #plt.colorbar()
-
-
-# In[282]:
-
-
-nA = net(A).reshape(-1, 64, N * N)
-nB = net(B).reshape(-1, 64, N * N)
-
-cc = torch.einsum("iCN,iCK->iNK", nA, nB)
-
-cc_A = torch.softmax(cc, axis=1)
-cc_B = torch.softmax(cc, axis=2)
-loss = cc_A * cc_B
-
-show(loss)
-plt.colorbar()
-net(A).shape
-
-
-# In[ ]:
-
-
-
-
-
-# In[288]:
-
-
-i, j = 10, 12
-
-show(cc.reshape([N] * 4)[i, j])
-plt.colorbar()
-def argmax_2d(arr):
-    ind = np.argmax(arr)
-    return [ind % arr.shape[0], ind // arr.shape[0]]
-import scipy.ndimage.measurements
-#x, y = argmax_2d(cc_A.reshape([28] * 4)[:, :, i, j])
-y, x = scipy.ndimage.measurements.center_of_mass(cc_A.reshape([N] * 4)[:, :, i, j].detach().numpy())
-
-plt.scatter(x, y)
-
-reshaped = cc_A.reshape([N] * 4).detach().numpy()
-
-
-# In[287]:
-
-
-import scipy.ndimage
-grid = np.array([
-    [
-        #(argmax_2d(reshaped[i, j]) if (np.max(reshaped[i, j]) > .01) else [np.nan, np.nan])
-        scipy.ndimage.measurements.center_of_mass(reshaped[i, j].transpose())
-
-        for i in range(N)]
-    for j in range(N)
-])
-grid.shape
-grid = grid.astype(float)
-#grid[:, :, 0] = scipy.ndimage.gaussian_filter(grid[:, :, 0], 1)
-#grid[:, :, 1] = scipy.ndimage.gaussian_filter(grid[:, :, 1], 1)
-
-grid = grid[3:-3, 3:-3]
-
-
-plt.plot(grid[:, :, 0], grid[:, :, 1])
-plt.plot(grid[:, :, 0].transpose(), grid[:, :, 1].transpose())
-plt.ylim(N, 0)
-plt.show()
-show(B)
-plt.scatter(grid[:, :, 0], grid[:, :, 1], c="red", s=100)
-plt.scatter(grid[:, :, 0], grid[:, :, 1], c=np.array(A[0, 0, 3:-3, 3:-3]).transpose(), s=90)
-plt.ylim(N, 0)
-plt.show()
-
-
-# In[ ]:
-
-
-
-
-
-# In[245]:
-
-
-C
-
-
-# In[246]:
-
-
-show(torch.sum(loss, axis=1).reshape(N, N))
-plt.colorbar()
-
-
-# In[247]:
 
 
 def train(net, d1, d2):
@@ -307,100 +144,85 @@ def pass_(A, B, net, optimizer):
                 loss.backward()
                 optimizer.step()
                 return loss.detach()
+def do_many_visualizations(prefix, A, B, net):
+    prefix = footsteps.output_dir + prefix + "/"
+    os.mkdir(prefix)
+    plt.subplot(1, 2, 1)
 
+    show(B)
+    plt.subplot(1, 2, 2)
+    show(A)
+    plt.savefig(prefix = "A,B.png")
 
-# In[264]:
+    net.cpu()
+
+    for i in range(30):
+        plt.subplot(5, 6, i + 1)
+        plt.xticks([])
+        plt.yticks([])
+        show(net(A)[0, i])
+        #plt.colorbar()
+
+    nA = net(A).reshape(-1, 64, N * N)
+    nB = net(B).reshape(-1, 64, N * N)
+
+    cc = torch.einsum("iCN,iCK->iNK", nA, nB)
+
+    cc_A = torch.softmax(cc, axis=1)
+    cc_B = torch.softmax(cc, axis=2)
+    loss = cc_A * cc_B
+
+    show(loss)
+    plt.colorbar()
+    plt.savefig(prefix + "loss_full.png")
+
+    i, j = 10, 12
+
+    show(cc.reshape([N] * 4)[i, j])
+    plt.colorbar()
+    y, x = scipy.ndimage.measurements.center_of_mass(cc_A.reshape([N] * 4)[:, :, i, j].detach().numpy())
+
+    plt.scatter(x, y)
+
+    plt.savefig("One_pixel_regis.png")
+
+    reshaped = cc_A.reshape([N] * 4).detach().numpy()
+
+    grid = np.array([
+        [
+            scipy.ndimage.measurements.center_of_mass(reshaped[i, j].transpose())
+            for i in range(N)]
+        for j in range(N)
+    ])
+    #grid[:, :, 0] = scipy.ndimage.gaussian_filter(grid[:, :, 0], 1)
+    #grid[:, :, 1] = scipy.ndimage.gaussian_filter(grid[:, :, 1], 1)
+
+    grid = grid[3:-3, 3:-3]
+
+    plt.plot(grid[:, :, 0], grid[:, :, 1])
+    plt.plot(grid[:, :, 0].transpose(), grid[:, :, 1].transpose())
+    plt.ylim(N, 0)
+    plt.savefig(prefix + "/grid.png")
+    show(B)
+    plt.scatter(grid[:, :, 0], grid[:, :, 1], c="red", s=100)
+    plt.scatter(grid[:, :, 0], grid[:, :, 1], c=np.array(A[0, 0, 3:-3, 3:-3]).transpose(), s=90)
+    plt.ylim(N, 0)
+    plt.savefig(prefix + "/dots.png")
+
+    show(torch.sum(loss, axis=1).reshape(N, N))
+    plt.colorbar()
+    
+    plt.savefig(prefix + "/loss_image.png")
+net = RegisNetNoPad()
+
+A = list(d1_triangles)[0][0][:1]
+B = list(d1_triangles)[1][0][:1]
+
+do_many_visualizations("before_train", A, B, net)
 
 
 l = train(net, d1_triangles, d2_triangles)
 
+do_many_visualizations("after_train", A, B, net)
 
-# In[251]:
-
-
-net.cpu()
-
-
-# In[252]:
-
-
-out_norms = torch.sqrt(torch.sum(net(A)**2, 1, keepdim=True))
-
-
-# In[253]:
-
-
-show(out_norms)
-plt.colorbar()
-
-
-# In[254]:
-
-
-get_ipython().run_line_magic('pinfo', 'torch.clamp')
-
-
-# In[255]:
-
-
-show(cc)
-plt.colorbar()
-
-
-# In[256]:
-
-
-scipy.ndimage.measurements.center_of_mass(np.array(cc_A.reshape([28] * 4)[:, :, i, j].detach()))
-
-
-# In[257]:
-
-
-show(cc_A.reshape([28] * 4)[:, :, i, j].cpu().detach())
-
-
-# In[259]:
-
-
-plt.plot(cc[0, 0].detach())
-
-
-# In[260]:
-
-
-show(cc_A)
-
-
-# In[261]:
-
-
-from sklearn.decomposition import PCA
-pca = PCA(n_components=180)
-pca.fit(cc_A.detach()[0])
-
-
-# In[262]:
-
-
-pca.explained_variance_ratio_
-
-
-# In[263]:
-
-
-plt.plot(np.cumsum(pca.explained_variance_ratio_))
-plt.xlabel("eigenvector")
-plt.ylabel("Cumulative explained variance")
-
-
-# In[214]:
-
-
-torch.save(net.state_dict(), "tri_cir_hol.pth")
-
-
-# In[ ]:
-
-
-
-
+torch.save(net.state_dict(), footsteps.output_dir + "tri_cir_hol.pth")
