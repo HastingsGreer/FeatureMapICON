@@ -189,7 +189,8 @@ def do_many_visualizations(prefix, A, B, net):
         plt.yticks([])
         show(net(A)[0, i])
         # plt.colorbar()
-
+    plt.savefig(prefix + "feature_maps.png")
+    plt.clf()
     nA = net(A).reshape(-1, 64, N * N)
     nB = net(B).reshape(-1, 64, N * N)
 
@@ -206,7 +207,7 @@ def do_many_visualizations(prefix, A, B, net):
 
     i, j = 10, 12
 
-    show(cc.reshape([N] * 4)[i, j])
+    show(cc_a.reshape([N] * 4)[i, j])
     plt.colorbar()
     y, x = scipy.ndimage.measurements.center_of_mass(
         cc_A.reshape([N] * 4)[:, :, i, j].detach().numpy()
