@@ -1,4 +1,5 @@
 import footsteps
+import pykeops
 import os
 import scipy.ndimage
 import scipy.ndimage.measurements
@@ -11,7 +12,6 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 from torch.autograd import Function
 from torch.nn import Module
-
 
 def show(x):
     while len(x.shape) > 2:
@@ -184,7 +184,9 @@ def do_many_visualizations(prefix, A, B, net):
     plt.subplot(1, 2, 2)
     show(A)
     plt.savefig(prefix + "A,B.png")
+    plt.show()
     plt.clf()
+
     net.cpu()
 
     for i in range(30):
@@ -194,6 +196,7 @@ def do_many_visualizations(prefix, A, B, net):
         show(net(A)[0, i])
         # plt.colorbar()
     plt.savefig(prefix + "feature_maps.png")
+    plt.show()
     plt.clf()
     nA = net(A).reshape(-1, 64, N * N)
     nB = net(B).reshape(-1, 64, N * N)
@@ -207,6 +210,7 @@ def do_many_visualizations(prefix, A, B, net):
     show(loss)
     plt.colorbar()
     plt.savefig(prefix + "loss_full.png")
+    plt.show()
     plt.clf()
 
     i, j = 10, 12
@@ -220,6 +224,7 @@ def do_many_visualizations(prefix, A, B, net):
     plt.scatter(x, y)
 
     plt.savefig(prefix + "One_pixel_regis.png")
+    plt.show()
     plt.clf()
 
     reshaped = cc_A.reshape([N] * 4).detach().numpy()
@@ -242,6 +247,7 @@ def do_many_visualizations(prefix, A, B, net):
     plt.plot(grid[:, :, 0].transpose(), grid[:, :, 1].transpose())
     plt.ylim(N, 0)
     plt.savefig(prefix + "/grid.png")
+    plt.show()
     plt.clf()
     show(B)
     plt.scatter(grid[:, :, 0], grid[:, :, 1], c="red", s=100)
@@ -250,12 +256,14 @@ def do_many_visualizations(prefix, A, B, net):
     )
     plt.ylim(N, 0)
     plt.savefig(prefix + "/dots.png")
+    plt.show()
     plt.clf()
 
     show(torch.sum(loss, axis=1).reshape(N, N))
     plt.colorbar()
 
     plt.savefig(prefix + "/loss_image.png")
+    plt.show()
     plt.clf()
 
 if __name__ == "__main__":
