@@ -145,7 +145,7 @@ def train(net, d1, d2):
         loss_history.append([loss])
         print(loss)
 
-        do_many_visualizations("after_train", A, B, net)
+        #do_many_visualizations("after_train", A, B, net)
 
         torch.save(net.state_dict(), footsteps.output_dir + "tri_cir_hol.pth")
     print("]")
