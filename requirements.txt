@@ -1,0 +1,6 @@
+scipy
+jupyter
+numpy
+torchvision
+matplotlib
+footsteps

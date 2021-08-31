@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 from torch.autograd import Function
 from torch.nn import Module
-import footsteps
 
 
 def show(x):
@@ -53,7 +52,7 @@ d1_mnist_test, d2_mnist_test = get_dataset("test")
 
 
 N = 28
-BATCH_SIZE = 32
+BATCH_SIZE = 128
 
 
 def get_dataset_triangles(split):
@@ -144,6 +143,10 @@ def train(net, d1, d2):
                 loss = loss_
         loss_history.append([loss])
         print(loss)
+
+        do_many_visualizations("after_train", A, B, net)
+
+        torch.save(net.state_dict(), footsteps.output_dir + "tri_cir_hol.pth")
     print("]")
     return loss_history
 
@@ -207,7 +210,7 @@ def do_many_visualizations(prefix, A, B, net):
 
     i, j = 10, 12
 
-    show(cc_a.reshape([N] * 4)[i, j])
+    show(cc_A.reshape([N] * 4)[i, j])
     plt.colorbar()
     y, x = scipy.ndimage.measurements.center_of_mass(
         cc_A.reshape([N] * 4)[:, :, i, j].detach().numpy()
@@ -254,17 +257,19 @@ def do_many_visualizations(prefix, A, B, net):
     plt.savefig(prefix + "/loss_image.png")
     plt.clf()
 
+if __name__ == "__main__":
+    
+    import footsteps
+    net = RegisNetNoPad()
 
-net = RegisNetNoPad()
+    A = list(d1_triangles)[0][0][:1]
+    B = list(d1_triangles)[1][0][:1]
 
-A = list(d1_triangles)[0][0][:1]
-B = list(d1_triangles)[1][0][:1]
-
-do_many_visualizations("before_train", A, B, net)
+    do_many_visualizations("before_train", A, B, net)
 
 
-l = train(net, d1_triangles, d2_triangles)
+    l = train(net, d1_triangles, d2_triangles)
 
-do_many_visualizations("after_train", A, B, net)
+    do_many_visualizations("after_train", A, B, net)
 
-torch.save(net.state_dict(), footsteps.output_dir + "tri_cir_hol.pth")
+    torch.save(net.state_dict(), footsteps.output_dir + "tri_cir_hol.pth")
