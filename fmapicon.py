@@ -1,3 +1,4 @@
+import footsteps
 import os
 import scipy.ndimage
 import scipy.ndimage.measurements
