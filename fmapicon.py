@@ -19,7 +19,10 @@ def show(x):
     plt.imshow(x.detach().cpu())
 
 
-def get_dataset(split):
+N = 28 * 2
+BATCH_SIZE = 32
+
+def get_dataset_mnist(split):
     ds = torch.utils.data.DataLoader(
         torchvision.datasets.MNIST(
             "./files/",
@@ -47,13 +50,43 @@ def get_dataset(split):
     )
     return d1, d2
 
+def get_dataset_mnist_double(split):
+    ds = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST(
+            "./files/",
+            transform=torchvision.transforms.ToTensor(),
+            download=True,
+            train=(split == "train"),
+        ),
+        batch_size=500,
+    )
+    images = []
+    for _, batch in enumerate(ds):
+        label = np.array(batch[1])
+        batch_nines = label == 5
+        image = np.array(batch[0])[batch_nines]
 
-d1_mnist, d2_mnist = get_dataset("train")
-d1_mnist_test, d2_mnist_test = get_dataset("test")
+        images.append(image)
+    images = np.concatenate(images)
+    data_t = torch.Tensor(images)
+    data_t = F.interpolate(data_t, scale_factor=2, mode="bicubic")
+    ds = torch.utils.data.TensorDataset(data_t)
+    d1, d2 = (
+        torch.utils.data.DataLoader(
+            ds,
+            batch_size=BATCH_SIZE,
+            shuffle=True,
+        )
+        for _ in (1, 1)
+    )
+    return d1, d2
 
 
-N = 28
-BATCH_SIZE = 128
+#d1_mnist, d2_mnist = get_dataset_mnist("train")
+#d1_mnist_test, d2_mnist_test = get_dataset_mnist("test")
+
+d1_mnist_d, d2_mnist_d = get_dataset_mnist_double("train")
+
 
 
 def get_dataset_triangles(split):
@@ -96,26 +129,26 @@ def get_dataset_triangles(split):
     return d1, d2
 
 
-d1_triangles, d2_triangles = get_dataset_triangles("train")
-d1_triangles_test, d2_triangles_test = get_dataset_triangles("test")
+#d1_triangles, d2_triangles = get_dataset_triangles("train")
+#d1_triangles_test, d2_triangles_test = get_dataset_triangles("test")
 
 
 class RegisNetNoPad(nn.Module):
     def __init__(self):
         super(RegisNetNoPad, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(11, 10, kernel_size=5)
+        self.conv2 = nn.Conv2d(11, 10, kernel_size=5, dilation=2)
         self.conv3 = nn.Conv2d(21, 10, kernel_size=5)
-        self.conv4 = nn.Conv2d(31, 10, kernel_size=5)
+        self.conv4 = nn.Conv2d(31, 10, kernel_size=5, dilation=3)
         self.conv5 = nn.Conv2d(41, 10, kernel_size=5)
-        self.conv6 = nn.Conv2d(51, 64, kernel_size=5)
+        self.conv6 = nn.Conv2d(51, 64, kernel_size=5, dilation=2)
 
     def forward(self, x):
-        x = torch.nn.functional.pad(x, [12] * 4)
+        x = torch.nn.functional.pad(x, [20] * 4)
         x = torch.cat([x[:, :, 2:-2, 2:-2], F.relu(self.conv1(x))], 1)
-        x = torch.cat([x[:, :, 2:-2, 2:-2], F.relu(self.conv2(x))], 1)
+        x = torch.cat([x[:, :, 4:-4, 4:-4], F.relu(self.conv2(x))], 1)
         x = torch.cat([x[:, :, 2:-2, 2:-2], F.relu(self.conv3(x))], 1)
-        x = torch.cat([x[:, :, 2:-2, 2:-2], F.relu(self.conv4(x))], 1)
+        x = torch.cat([x[:, :, 6:-6, 6:-6], F.relu(self.conv4(x))], 1)
         x = torch.cat([x[:, :, 2:-2, 2:-2], F.relu(self.conv5(x))], 1)
 
         out = self.conv6(x)
@@ -128,18 +161,19 @@ class RegisNetNoPad(nn.Module):
         return out * 10
 
 
-def train(net, d1, d2):
+def train(net, d1, d2, iterations=400):
     optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
+    scaler = GradScaler()
     net.train()
     net.cuda()
     loss_history = []
     print("[", end="")
-    for epoch in range(400):
+    for epoch in range(iterations):
         print("-", end="")
         if (epoch + 1) % 50 == 0:
             print("]", end="\n[")
         for A, B in list(zip(d1, d2)):
-            loss_ = pass_(A, B, net, optimizer)
+            loss_ = pass_(A, B, net, optimizer, scaler)
             if loss_ is not None:
                 loss = loss_
         loss_history.append([loss])
@@ -151,28 +185,42 @@ def train(net, d1, d2):
     print("]")
     return loss_history
 
-
-def pass_(A, B, net, optimizer):
+from torch.cuda.amp import autocast
+from torch.cuda.amp import GradScaler
+def pass_(A, B, net, optimizer, scaler):
 
     if A[0].size()[0] == BATCH_SIZE:
+        #with autocast():
         image_A = A[0].cuda()
         image_B = B[0].cuda()
         optimizer.zero_grad()
 
-        nA = net(image_A)[::, ::].reshape(-1, BATCH_SIZE, N * N)
-        nB = net(image_B)[::, ::].reshape(-1, BATCH_SIZE, N * N)
+        nA = net(image_A)[::, ::].reshape(-1, 64, N * N)
+        nB = net(image_B)[::, ::].reshape(-1, 64, N * N)
 
-        cc = torch.einsum("icn,ick->ink", nA, nB)
+        nA = nA
+        nB = nB
 
+        #cc = torch.einsum("icn,ick->ink", nA, nB)
+        #cc = nA + nB
+        cc = torch.matmul(nA.transpose(1, 2), nB)
+
+        #print(cc.shape)
         cc_A = torch.softmax(cc, axis=1)
         cc_B = torch.softmax(cc, axis=2)
         loss = cc_A * cc_B
         loss = torch.clamp(loss, max=0.3)
-        loss = -torch.sum(loss) / BATCH_SIZE / (N * N)
+        loss = -torch.sum(loss).float() / BATCH_SIZE / (N * N)
+        #scaler.scale(loss).backward()
 
         loss.backward()
         optimizer.step()
+        #scaler.step(optimizer)
+        #scaler.update()
         return loss.detach()
+    else:
+      global ads
+      ads = A
 
 
 def do_many_visualizations(prefix, A, B, net):
