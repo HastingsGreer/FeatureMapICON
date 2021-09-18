@@ -1,5 +1,10 @@
 **.swp
 files/*
 results/*
-notebooks/.ipynb_checkpoints/*
+**/.ipynb_checkpoints/*
 notebooks/files/*
+**/__pycache__/
+
+**/*.index*
+**/*.data*
+tensorflow/saved_models/*
