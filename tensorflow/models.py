@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def make_model(clip_value):
+def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128):
     model = tf.keras.Sequential(
       [
         
