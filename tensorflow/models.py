@@ -49,7 +49,7 @@ def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128):
 
     def fmapICON_clamp_loss(tensor, nonsense):
     
-      return -tf.math.reduce_sum(nonsense) / BATCH_SIZE / SIDE_LENGTH / SIDE_LENGTH * strategy.num_replicas_in_sync
+      return -tf.math.reduce_mean(nonsense)
 
     outer_model = tf.keras.Model(inputs=(input_A, input_B), outputs=loss)
 

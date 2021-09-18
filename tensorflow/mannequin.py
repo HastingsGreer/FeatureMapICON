@@ -1,6 +1,7 @@
 import videoReplayFast
 
 from models import make_model
+import fmapicon_utils
 import footsteps
 gen = videoReplayFast.threadedProvide()
 import tensorflow as tf
@@ -70,7 +71,7 @@ lr_decay = tf.keras.callbacks.LearningRateScheduler(
 class SaveWeightsCallback(tf.keras.callbacks.Callback):
     
 
-    def on_epoch_start(self, epoch, logs=None):
+    def on_epoch_begin(self, epoch, logs=None):
         import os
         prefix = "epoch" + str(epoch)
         os.mkdir(os.path.join(footsteps.output_dir, prefix))

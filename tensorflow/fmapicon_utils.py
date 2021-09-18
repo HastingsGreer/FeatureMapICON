@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 import os
 
 def execute_model(A, B, model):
@@ -154,31 +156,31 @@ def visualize_featuremaps(F_A, F_B):
 
     # In[44]:
 
-
-w = model.get_weights()
-
-
-# In[45]:
+def visualize_weights(model):
+    w = model.get_weights()
 
 
-plt.figure(figsize=(5, 23))
-for i in range(3):
-    for j in range(10):
-        plt.subplot(10, 3, 3 * j + i + 1)
-        plt.imshow(w[8][:, :, i, j + 10])
+    # In[45]:
 
 
-# In[79]:
+    plt.figure(figsize=(5, 23))
+    for i in range(3):
+        for j in range(10):
+            plt.subplot(10, 3, 3 * j + i + 1)
+            plt.imshow(w[8][:, :, i, j + 10])
 
 
-model.save("longtrain_longgap")
-model.save_weights("longtrain_longgap_w")
+    # In[79]:
 
 
-# In[39]:
+    model.save("longtrain_longgap")
+    model.save_weights("longtrain_longgap_w")
 
 
-gen.gi_frame.f_locals
+    # In[39]:
+
+
+    gen.gi_frame.f_locals
 
 
 # In[37]:
