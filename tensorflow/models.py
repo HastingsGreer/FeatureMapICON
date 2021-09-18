@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def make_model():
+def make_model(clip_value):
     model = tf.keras.Sequential(
       [
         
@@ -45,7 +45,7 @@ def make_model():
     loss = tf.keras.layers.Lambda(lambda var: tf.math.reduce_sum(var, axis=-1))(loss)
 
 
-    loss = tf.keras.layers.Lambda(lambda var: tf.clip_by_value(var, 0, .8), name="clip")(loss)
+    loss = tf.keras.layers.Lambda(lambda var: tf.clip_by_value(var, 0, clip_value), name="clip")(loss)
 
     def fmapICON_clamp_loss(tensor, nonsense):
     

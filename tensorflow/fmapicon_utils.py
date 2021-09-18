@@ -76,6 +76,7 @@ def visualize_ten_displacements(A, B, model, prefix=None):
         g = grid[k].transpose(1, 0, 2)
         plt.imshow(g[:, :, 0] - np.expand_dims(np.arange(90), 0))
         plt.colorbar()
+    maybe_savefig(prefix, "figures.png")
 
 def visualize_featuremaps(F_A, F_B):
     f_a = np.array(F_A)#.reshape(90, 90, 128)

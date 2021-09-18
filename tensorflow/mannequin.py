@@ -13,6 +13,7 @@ def training_generator():
     while True:
         inp = next(gen).numpy().astype(np.float32) / 255.
         yield (inp[:, :, :, [2, 1, 0]], inp[:, :, :, [6, 5, 4]]), inp[:, :, :, [6, 5, 4]]
+(A, B), q = next(training_generator())
 
 # Detect hardware
 try:
@@ -57,7 +58,7 @@ FEATURE_LENGTH = 128
 
     
 with strategy.scope():
-    model = make_model()
+    model = make_model(.6)
 # print model layers
 model.summary()
 
@@ -69,9 +70,12 @@ lr_decay = tf.keras.callbacks.LearningRateScheduler(
 class SaveWeightsCallback(tf.keras.callbacks.Callback):
     
 
-    def on_epoch_end(self, epoch, logs=None):
-        model.save_weights(footsteps.output_dir + "correct_clip_model_weights.tf")
-        
+    def on_epoch_start(self, epoch, logs=None):
+        import os
+        prefix = "epoch" + str(epoch)
+        os.mkdir(os.path.join(footsteps.output_dir, prefix)
+        model.save_weights(os.path.join(footsteps.output_dir, prefix, "model_weights.tf"))
+        fmapicon_utils.visualize_ten_displacements(A, B, model, prefix)
 
 
 # In[ ]:
