@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 def patchwise_dense_model(SIDE_LENGTH, FEATURE_LENGTH):
-	
+    
     inner_model = tf.keras.Sequential(
           [
             
@@ -27,7 +27,7 @@ def patchwise_dense_model(SIDE_LENGTH, FEATURE_LENGTH):
             #tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
             #tf.keras.layers.Activation('relu'), # activation after batch norm
           ])
-	return inner_model
+    return inner_model
 
 def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128, model = None):
     if model is None:

@@ -1,6 +1,6 @@
 import videoReplayFast
 
-from models import make_model
+import models
 import fmapicon_utils
 import footsteps
 gen = videoReplayFast.threadedProvide()
@@ -41,15 +41,9 @@ else:
 print("Number of accelerators: ", strategy.num_replicas_in_sync)
 
 BATCH_SIZE = 16 * strategy.num_replicas_in_sync # Gobal batch size.
-# The global batch size will be automatically sharded across all
-# replicas by the tf.data.Dataset API. A single TPU has 8 cores.
-# The best practice is to scale the batch size by the number of
-# replicas (cores). The learning rate should be increased as well.
 
 LEARNING_RATE = 0.001
 LEARNING_RATE_EXP_DECAY = 1# = 0.6 if strategy.num_replicas_in_sync == 1 else 0.7
-# Learning rate computed later as LEARNING_RATE * LEARNING_RATE_EXP_DECAY**epoch
-# 0.7 decay instead of 0.6 means a slower decay, i.e. a faster learnign rate.
 
 SCALE = 1
 SIDE_LENGTH = 90
@@ -58,32 +52,8 @@ FEATURE_LENGTH = 128
 
     
 with strategy.scope():
-    inner_model = tf.keras.Sequential(
-          [
-            
-            #tf.keras.layers.ZeroPadding2D(padding=(15, 15), input_shape=(SIDE_LENGTH, SIDE_LENGTH, 1)),
-            
-            tf.keras.layers.Conv2D(filters=512, kernel_size=31, padding='valid', use_bias=False), # no bias necessary before batch norm
-            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-            tf.keras.layers.Activation('relu'), # activation after batch norm
-
-            tf.keras.layers.Conv2D(filters=2048, kernel_size=1, padding='valid', use_bias=False),
-            tf.keras.layers.BatchNormalization(scale=False, center=True),
-            tf.keras.layers.Activation('relu'),
-
-            #tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False),
-            #tf.keras.layers.BatchNormalization(scale=False, center=True),
-            #tf.keras.layers.Activation('relu'),
-           
-            tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
-            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-            tf.keras.layers.Activation('relu'), # activation after batch norm
-           
-            tf.keras.layers.Conv2D(filters=128, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
-            #tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-            #tf.keras.layers.Activation('relu'), # activation after batch norm
-          ])
-    model = make_model(.6, SIDE_LENGTH, FEATURE_LENGTH=FEATURE_LENGTH)
+    inner_model = models.patchwise_dense_model(SIDE_LENGTH, FEATURE_LENGTH)
+    model = models.make_model(.6, SIDE_LENGTH, FEATURE_LENGTH=FEATURE_LENGTH, model=inner_model)
 # print model layers
 model.summary()
 
