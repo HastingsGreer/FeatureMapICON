@@ -1,6 +1,7 @@
 **.swp
 files/*
 results/*
+tensorflow/results/*
 **/.ipynb_checkpoints/*
 notebooks/files/*
 **/__pycache__/

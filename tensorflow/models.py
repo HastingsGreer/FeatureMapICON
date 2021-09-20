@@ -1,31 +1,61 @@
 import tensorflow as tf
 
-def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128):
-    model = tf.keras.Sequential(
-      [
-        
-        #tf.keras.layers.ZeroPadding2D(padding=(15, 15), input_shape=(SIDE_LENGTH, SIDE_LENGTH, 1)),
-        
-        tf.keras.layers.Conv2D(filters=64, kernel_size=11, padding='valid', use_bias=False), # no bias necessary before batch norm
-        tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-        tf.keras.layers.Activation('relu'), # activation after batch norm
+def patchwise_dense_model(SIDE_LENGTH, FEATURE_LENGTH):
+	
+    inner_model = tf.keras.Sequential(
+          [
+            
+            #tf.keras.layers.ZeroPadding2D(padding=(15, 15), input_shape=(SIDE_LENGTH, SIDE_LENGTH, 1)),
+            
+            tf.keras.layers.Conv2D(filters=512, kernel_size=31, padding='valid', use_bias=False), # no bias necessary before batch norm
+            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            tf.keras.layers.Activation('relu'), # activation after batch norm
 
-        tf.keras.layers.Conv2D(filters=128, kernel_size=11, padding='valid', use_bias=False),
-        tf.keras.layers.BatchNormalization(scale=False, center=True),
-        tf.keras.layers.Activation('relu'),
+        tf.keras.layers.Conv2D(filters=2048, kernel_size=1, padding='valid', use_bias=False),
+            tf.keras.layers.BatchNormalization(scale=False, center=True),
+            tf.keras.layers.Activation('relu'),
 
-        tf.keras.layers.Conv2D(filters=256, kernel_size=11, padding='valid', use_bias=False),
-        tf.keras.layers.BatchNormalization(scale=False, center=True),
-        tf.keras.layers.Activation('relu'),
-       
-        tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
-        tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-        tf.keras.layers.Activation('relu'), # activation after batch norm
-       
-        tf.keras.layers.Conv2D(filters=128, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
-        #tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
-        #tf.keras.layers.Activation('relu'), # activation after batch norm
-      ])
+            #tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False),
+            #tf.keras.layers.BatchNormalization(scale=False, center=True),
+            #tf.keras.layers.Activation('relu'),
+           
+            tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
+            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            tf.keras.layers.Activation('relu'), # activation after batch norm
+           
+            tf.keras.layers.Conv2D(filters=128, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
+            #tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            #tf.keras.layers.Activation('relu'), # activation after batch norm
+          ])
+	return inner_model
+
+def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128, model = None):
+    if model is None:
+        model = tf.keras.Sequential(
+          [
+            
+            #tf.keras.layers.ZeroPadding2D(padding=(15, 15), input_shape=(SIDE_LENGTH, SIDE_LENGTH, 1)),
+            
+            tf.keras.layers.Conv2D(filters=64, kernel_size=11, padding='valid', use_bias=False), # no bias necessary before batch norm
+            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            tf.keras.layers.Activation('relu'), # activation after batch norm
+
+            tf.keras.layers.Conv2D(filters=128, kernel_size=11, padding='valid', use_bias=False),
+            tf.keras.layers.BatchNormalization(scale=False, center=True),
+            tf.keras.layers.Activation('relu'),
+
+            tf.keras.layers.Conv2D(filters=256, kernel_size=11, padding='valid', use_bias=False),
+            tf.keras.layers.BatchNormalization(scale=False, center=True),
+            tf.keras.layers.Activation('relu'),
+           
+            tf.keras.layers.Conv2D(filters=512, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
+            tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            tf.keras.layers.Activation('relu'), # activation after batch norm
+           
+            tf.keras.layers.Conv2D(filters=128, kernel_size=1, padding='valid', use_bias=False), # no bias necessary before batch norm
+            #tf.keras.layers.BatchNormalization(scale=False, center=True), # no batch norm scaling necessary before "relu"
+            #tf.keras.layers.Activation('relu'), # activation after batch norm
+          ])
     
     input_A = tf.keras.Input(shape=(SIDE_LENGTH + 30, SIDE_LENGTH + 30, 3))
     input_B = tf.keras.Input(shape=(SIDE_LENGTH + 30, SIDE_LENGTH + 30, 3))

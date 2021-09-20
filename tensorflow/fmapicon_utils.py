@@ -7,12 +7,6 @@ def execute_model(A, B, model):
     SIDE_LENGTH = 90
     FEATURE_LENGTH = 128
 
-    A = A[40:]
-    B = B[40:]
-
-    x = model((A[:3], B[:3]))
-
-
     inner_model = model.layers[2]
 
     F_A = tf.reshape(inner_model(A)[:10], (10, SIDE_LENGTH ** 2, FEATURE_LENGTH))
