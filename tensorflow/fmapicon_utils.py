@@ -4,7 +4,9 @@ import tensorflow as tf
 import os
 
 def execute_model(A, B, model):
-    
+    SIDE_LENGTH = 90
+    FEATURE_LENGTH = 128
+
     A = A[40:]
     B = B[40:]
 
@@ -21,10 +23,7 @@ def execute_model(A, B, model):
     cc = np.array(cc)
 
 
-    plt.imshow(cc[3, 45, 68])
-    plt.colorbar()
 
-    plt.figure(figsize=(4, 4))
     import scipy.ndimage
     grid = np.array(
       [
@@ -43,7 +42,7 @@ def maybe_savefig(prefix, name):
     if prefix is not None:
         import footsteps
         fname = os.path.join(footsteps.output_dir, prefix, name)
-        os.makedirs(os.dirname(fname), exist_ok=True)
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         plt.savefig(fname)
 
 def draw_grid(grid):
@@ -57,24 +56,25 @@ def draw_grid(grid):
     plt.show()
 def visualize_ten_displacements(A, B, model, prefix=None):
     
-    SIDE_LENGTH = A.shape[1]
+    SIDE_LENGTH = A.shape[1] - 30
     cc, grid = execute_model(A, B, model)
 
     #grid[:, :, 0] = scipy.ndimage.gaussian_filter(grid[:, :, 0], 1)
     #grid[:, :, 1] = scipy.ndimage.gaussian_filter(grid[:, :, 1], 1)
-
-
+    frames_across = 4
+    plt.figure(figsize=(19, 37))
     for k in range(10):
-        plt.figure(figsize=(16, 37))
-        plt.subplot(10, 4, 1)
+        row_ofs = k * frames_across
+        
+        plt.subplot(10, frames_across, 1 + row_ofs)
         plt.imshow(A[k, 15:-15, 15:-15, 0])
-        plt.subplot(10, 4, 2)
+        plt.subplot(10, frames_across, 2+ row_ofs)
         plt.imshow(B[k, 15:-15, 15:-15, 0])
-        plt.subplot(10, 4, 3)
+        plt.subplot(10, frames_across, 3+ row_ofs)
         plt.ylim(SIDE_LENGTH, 0)
         plt.imshow(B[k, 15:-15, 15:-15, 0] * 0)
-        plt.scatter(grid[k, :, :, 0], grid[k, :, :, 1], c=np.array(A)[k, 15:-15, 15:-15, 0].transpose(), cmap="copper", s=.5)
-        plt.subplot(10, 4, 4)
+        plt.scatter(grid[k, :, :, 0], grid[k, :, :, 1], c=np.array(A)[k, 15:-15, 15:-15, 0].transpose(), s=.5)
+        plt.subplot(10, frames_across, 4+ row_ofs)
         g = grid[k].transpose(1, 0, 2)
         plt.imshow(g[:, :, 0] - np.expand_dims(np.arange(90), 0))
         plt.colorbar()
