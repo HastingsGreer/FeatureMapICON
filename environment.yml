@@ -5,8 +5,9 @@ channels:
   - pytorch
   - defaults
 dependencies:
-  - pytorch=1.9
+  - pytorch=1.9.1
   - jupyter
+  - opencv
   - pip
   - pip:
-    opencv2-python
+    - scipy
