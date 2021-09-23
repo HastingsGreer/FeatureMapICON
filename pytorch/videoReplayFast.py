@@ -61,8 +61,8 @@ def grabShufflePutStep(inp, out):
         bigPacket = [inp.get() for _ in range(SHUFFLE_SIZE)]
         x = torch.cat(bigPacket, 0)
         indices = torch.randperm(SHUFFLE_SIZE * 64)
-        for i in range(SHUFFLE_SIZE):
-            out.put(x[indices[i * 64 : (i + 1) * 64]])
+        for i in range(SHUFFLE_SIZE * 16):
+            out.put(x[indices[i * 4 : (i + 1) * 4]])
 
 def grabShufflePut(inp, out):
     while True:
