@@ -1,0 +1,54 @@
+Command:
+FatTail.py
+System:
+biag-gpu3.cs.unc.edu
+Python:
+/playpen-raid1/tgreer/anaconda3/envs/tensorflow/bin/python
+Git Hash:
+3923889
+Uncommitted changes:
+diff --git a/tensorflow/FatTail.py b/tensorflow/FatTail.py
+index 1b04bb2..5792a48 100644
+--- a/tensorflow/FatTail.py
++++ b/tensorflow/FatTail.py
+@@ -62,6 +62,7 @@ with strategy.scope():
+ # print model layers
+ model.summary()
+ 
++model.load_weights("results/car_lilbatch/epoch15/model_weights.tf")
+ # set up learning rate decay
+ lr_decay = tf.keras.callbacks.LearningRateScheduler(
+     lambda epoch: LEARNING_RATE * LEARNING_RATE_EXP_DECAY**epoch,
+diff --git a/tensorflow/car_videos.py b/tensorflow/car_videos.py
+index 318d2e8..728803d 100644
+--- a/tensorflow/car_videos.py
++++ b/tensorflow/car_videos.py
+@@ -11,7 +11,7 @@ SHUFFLE_SIZE = 600
+ 
+ BATCH_SIZE=64
+ 
+-video_dir = "/playpen1/tgreer/IdiotsInCars/data256/"
++video_dir = "/playpen-nvme/tgreer/DashCamVideos/"
+ def framePacket():       
+ 
+     available_videos = os.listdir(video_dir)
+@@ -57,8 +57,8 @@ def grabShufflePutStep(inp, out):
+         bigPacket = [inp.get() for _ in range(SHUFFLE_SIZE)]
+         x = torch.cat(bigPacket, 0)
+         indices = torch.randperm(SHUFFLE_SIZE * 64)
+-        for i in range(SHUFFLE_SIZE * 4):
+-            out.put(x[indices[i * 16 : (i + 1) * 16]])
++        for i in range(SHUFFLE_SIZE):
++            out.put(x[indices[i * 64: (i + 1) * 64]])
+ 
+ def grabShufflePut(inp, out):
+     while True:
+@@ -67,7 +67,7 @@ def threadedProvide():
+     
+     packetQueue = multiprocessing.Queue(SHUFFLE_SIZE)
+     packetProcesses = [None for _ in range(4)]
+-    for i in range(2):
++    for i in range(3):
+         packetProcesses[i] = multiprocessing.Process(target=putFramePacketsOnQueue, args=(packetQueue,), daemon=True)
+         packetProcesses[i].start()
+     shuffledQueue = multiprocessing.Queue(SHUFFLE_SIZE // 6)
