@@ -11,7 +11,7 @@ SHUFFLE_SIZE = 600
 
 BATCH_SIZE=64
 
-video_dir = "/playpen1/tgreer/IdiotsInCars/data256/"
+video_dir = "/playpen-nvme/tgreer/DashCamVideos/"
 def framePacket():       
 
     available_videos = os.listdir(video_dir)
@@ -57,8 +57,8 @@ def grabShufflePutStep(inp, out):
         bigPacket = [inp.get() for _ in range(SHUFFLE_SIZE)]
         x = torch.cat(bigPacket, 0)
         indices = torch.randperm(SHUFFLE_SIZE * 64)
-        for i in range(SHUFFLE_SIZE * 4):
-            out.put(x[indices[i * 16 : (i + 1) * 16]])
+        for i in range(SHUFFLE_SIZE):
+            out.put(x[indices[i * 64: (i + 1) * 64]])
 
 def grabShufflePut(inp, out):
     while True:
@@ -67,7 +67,7 @@ def threadedProvide():
     
     packetQueue = multiprocessing.Queue(SHUFFLE_SIZE)
     packetProcesses = [None for _ in range(4)]
-    for i in range(2):
+    for i in range(3):
         packetProcesses[i] = multiprocessing.Process(target=putFramePacketsOnQueue, args=(packetQueue,), daemon=True)
         packetProcesses[i].start()
     shuffledQueue = multiprocessing.Queue(SHUFFLE_SIZE // 6)

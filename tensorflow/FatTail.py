@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 def training_generator():
     while True:
         inp = next(gen).numpy().astype(np.float32) / 255.
-        yield (inp[:12, :, :, [2, 1, 0]], inp[:12, :, :, [6, 5, 4]]), inp[:12, :, :, [6, 5, 4]]
+        yield (inp[:, :, :, [2, 1, 0]], inp[:, :, :, [6, 5, 4]]), inp[:, :, :, [6, 5, 4]]
 
 # Detect hardware
 try:
@@ -40,7 +40,7 @@ else:
   
 print("Number of accelerators: ", strategy.num_replicas_in_sync)
 
-BATCH_SIZE = 12 * strategy.num_replicas_in_sync # Gobal batch size.
+BATCH_SIZE = 16 * strategy.num_replicas_in_sync # Gobal batch size.
 # The global batch size will be automatically sharded across all
 # replicas by the tf.data.Dataset API. A single TPU has 8 cores.
 # The best practice is to scale the batch size by the number of
@@ -62,6 +62,7 @@ with strategy.scope():
 # print model layers
 model.summary()
 
+#model.load_weights("results/car_lilbatch/epoch15/model_weights.tf")
 # set up learning rate decay
 lr_decay = tf.keras.callbacks.LearningRateScheduler(
     lambda epoch: LEARNING_RATE * LEARNING_RATE_EXP_DECAY**epoch,

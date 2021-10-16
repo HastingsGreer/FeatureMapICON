@@ -75,8 +75,9 @@ def make_model(clip_value, SIDE_LENGTH, FEATURE_LENGTH=128, model = None):
     loss = tf.keras.layers.Lambda(lambda var: tf.math.reduce_sum(var, axis=-1))(loss)
 
 
-    loss = tf.keras.layers.Lambda(lambda var: tf.clip_by_value(var, 0, clip_value), name="clip")(loss)
 
+    #loss = tf.keras.layers.Lambda(lambda var: tf.clip_by_value(var, 0, clip_value), name="clip")(loss)
+    loss = tf.keras.layers.Lambda(lambda var: tf.math.log(tf.clip_by_value(var, 0.000001, 1)), name="log")(loss)
     def fmapICON_clamp_loss(tensor, nonsense):
     
       return -tf.math.reduce_mean(nonsense)
