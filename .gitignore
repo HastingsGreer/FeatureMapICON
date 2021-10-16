@@ -1,11 +1,12 @@
 **.swp
+data_storage/
 files/*
 results/*
 tensorflow/results/*
 **/.ipynb_checkpoints/*
 notebooks/files/*
 **/__pycache__/
-
+julia/
 **/*.index*
 **/*.data*
 tensorflow/saved_models/*

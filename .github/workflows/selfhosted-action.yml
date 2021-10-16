@@ -1,0 +1,33 @@
+name: gpu-tests
+
+on: [push, pull_request]
+
+jobs:
+  test-linux:
+    runs-on: [self-hosted, linux]
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        git --version
+        git --version
+        git submodule sync
+        git submodule update --init --recursive
+    - name: Download test dataset
+      run: |
+        data/download_preprocess_DAVIS.sh
+    - name: fast test with unittest
+      run: |
+        python -m unittest -k FAST
+    - name: GPU test with unittest
+      run: |
+        python -m unittest discover
+        data/eval_osvos_DAVIS.sh
