@@ -187,11 +187,12 @@ class FMAPICON_model:
         self.inner_model = make_model(.6, 90, 128)
         self.inner_model.load_weights(weights_path)
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
-        A = initial_frame[::4, 215:-215:4]    
-        B = current_frame[::4, 215:-215:4]
+        A = initial_frame[None, ::4, 215:-215:4]    
+        B = current_frame[None, ::4, 215:-215:4]
 
         
         cc, grid = execute_model(A, B, model)
 
+        channels = np.unique(initial_mask)
 
         return initial_mask
