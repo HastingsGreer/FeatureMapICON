@@ -36,11 +36,12 @@ def DavisEval(model, name):
 
             prev_image = curr_image
             prev_annoration = first_annotation
+
     subprocess.run(
         [
             "python",
-            "davis2017-evaluation/evaluation_method.py",
-            "--davis-path",
+            "evaluation_method.py",
+            "--davis_path",
             "data_storage/DAVIS",
             "--results_path",
             output_path,
