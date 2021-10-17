@@ -24,10 +24,7 @@ jobs:
     - name: Download test dataset
       run: |
         data/download_preprocess_DAVIS.sh
-    - name: fast test with unittest
-      run: |
-        python -m unittest -k FAST
     - name: GPU test with unittest
       run: |
-        python -m unittest discover
+        echo foo | python -m unittest discover
         data/eval_osvos_DAVIS.sh
