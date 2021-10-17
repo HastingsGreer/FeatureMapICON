@@ -16,9 +16,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        pip install -U -r requirements.txt
-        git --version
-        git --version
+        pip install -r requirements.txt
         git submodule sync
         git submodule update --init --recursive
     - name: Download test dataset
@@ -27,4 +25,4 @@ jobs:
     - name: GPU test with unittest
       run: |
         echo foo | python -m unittest discover
-        data/eval_osvos_DAVIS.sh
+        #data/eval_osvos_DAVIS.sh
