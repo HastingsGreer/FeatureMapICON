@@ -194,6 +194,7 @@ class FMAPICON_model:
         channels = np.unique(initial_mask)
 
         print(grid.shape)
-        warped_mask = initial_mask[::4, ::215:-215:4]
+        warped_mask = initial_mask[::4, 215:-215:4]
 
+        raise Exception("Gave up")
         return initial_mask
