@@ -16,7 +16,7 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -U -r requirements.txt
         git --version
         git --version
         git submodule sync
