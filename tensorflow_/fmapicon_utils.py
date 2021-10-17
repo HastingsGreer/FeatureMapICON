@@ -188,10 +188,12 @@ class FMAPICON_model:
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
         A = initial_frame[None, ::4, 215:-215:4]    
         B = current_frame[None, ::4, 215:-215:4]
-
         
         cc, grid = execute_model(A, B, model)
 
         channels = np.unique(initial_mask)
+
+        print(grid.shape)
+        warped_mask = initial_mask[::4, ::215:-215:4]
 
         return initial_mask
