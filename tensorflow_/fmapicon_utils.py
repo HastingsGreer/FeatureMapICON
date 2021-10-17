@@ -178,3 +178,8 @@ def visualize_weights(model):
 
 def do_nothing_model(initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
     return initial_mask
+
+def FMAPICON_model(initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
+    print(initial_frame.shape)
+    print(initial_mask.shape)
+    return initial_mask
