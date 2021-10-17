@@ -7,5 +7,5 @@ class DavisTestCase(unittest.TestCase):
 #    def testDoNothing(self):
 #        data.DavisEval(tensorflow_.fmapicon_utils.do_nothing_model, "do_nothing")
     def testFMAPICON(self):
-        data.DavisEval(tensorflow_.fmapicon_utils.FMAPICON_model("../tensorflow_/results/log_probability_2/"), "FMAPICON")
+        data.DavisEval(tensorflow_.fmapicon_utils.FMAPICON_model("tensorflow_/results/log_probability_2/epoch50/model_weights.tf"), "FMAPICON")
         
