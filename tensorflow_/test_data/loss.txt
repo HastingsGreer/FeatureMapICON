@@ -1,0 +1,2 @@
+Clip by value .6
+loss: .2804975

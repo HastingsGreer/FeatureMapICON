@@ -1,9 +1,9 @@
 import unittest
-import data.DavisEval
+import data
 
-import tensorflow.do_nothing_model
+import tensorflow.fmapicon_utils
 
 class DavisTestCase(unittest.TestCase):
     def testDoNothing(self):
-        data.DavisEval(tensorflow.do_nothing_model)
+        data.DavisEval(tensorflow.fmapicon_utils.do_nothing_model)
         
