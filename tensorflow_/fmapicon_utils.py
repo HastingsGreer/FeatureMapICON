@@ -185,9 +185,13 @@ class FMAPICON_model:
     def __init__(weights_path):
         self.inner_model = model
         self.inner_model = make_model(.6, 90, 128)
-        self.inner_model.load
+        self.inner_model.load_weights(weights_path)
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
+        A = initial_frame[::4, 215:-215:4]    
+        B = current_frame[::4, 215:-215:4]
+
         
-    
-    print(initial_mask.shape)
-    return initial_mask
+        cc, grid = execute_model(A, B, model)
+
+
+        return initial_mask
