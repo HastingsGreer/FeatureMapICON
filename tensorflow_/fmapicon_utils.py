@@ -179,7 +179,15 @@ def visualize_weights(model):
 def do_nothing_model(initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
     return initial_mask
 
-def FMAPICON_model(initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
-    print(initial_frame.shape)
+import models
+
+class FMAPICON_model:
+    def __init__(weights_path):
+        self.inner_model = model
+        self.inner_model = make_model(.6, 90, 128)
+        self.inner_model.load
+    def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
+        
+    
     print(initial_mask.shape)
     return initial_mask
