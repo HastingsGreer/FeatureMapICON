@@ -182,7 +182,7 @@ def do_nothing_model(initial_frame, initial_mask, prev_frame, prev_mask, current
 from tensorflow_.models import make_model
 
 class FMAPICON_model:
-    def __init__(weights_path):
+    def __init__(self, weights_path):
         self.inner_model = make_model(.6, 90, 128)
         self.inner_model.load_weights(weights_path)
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
