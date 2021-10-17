@@ -16,19 +16,21 @@ def DavisEval(model, name):
         sequence = sequence[:-1]  # strip newline
         sequence_out_path = output_path + sequence + "/"
         sequence_img_path = davis_path + "JPEGImages/480p/" + sequence + "/"
-        first_annotation = np.array(
-            Image.open(davis_path + "Annotations/480p/" + sequence + "/00000.png")
-        )
+        with open(davis_path + "Annotations/480p/" + sequence + "/00000.png", "rb") as handle:
+          first_annotation = np.array(
+            Image.open(handle)
+          )
 
         os.mkdir(output_path + sequence)
-
-        first_image = np.array(Image.open(sequence_img_path + "00000.jpg"))
+        with open(sequence_img_path + "00000.jpg", "rb") as handle:
+          first_image = np.array(Image.open(handle))
 
         prev_image = first_image
         prev_annotation = first_annotation
 
         for i in range(1, len(os.listdir(sequence_img_path))):
-            curr_image = Image.open(sequence_img_path + f"{i:05}.jpg")
+            with open(sequence_img_path + f"{i:05}.jpg", "rb") as handle:
+              curr_image = np.array(Image.open(handle))
             annotation = model(
                 first_image, first_annotation, prev_image, prev_annotation, curr_image
             )
