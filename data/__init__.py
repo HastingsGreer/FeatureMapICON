@@ -42,7 +42,7 @@ def DavisEval(model, name):
     subprocess.run(
         [
             "python",
-            "evaluation_method.py",
+            "davis2017-evaluation/evaluation_method.py",
             "--davis_path",
             "data_storage/DAVIS",
             "--results_path",
