@@ -4,7 +4,7 @@ import os
 import glob
 from PIL import Image
 import numpy as np
-
+import tqdm
 
 def DavisEval(model, name):
     davis_path = "data_storage/DAVIS/"
@@ -12,7 +12,7 @@ def DavisEval(model, name):
     os.mkdir(output_path)
     with open(davis_path + "/ImageSets/2017/val.txt", "r") as f:
         sequences = f.readlines()
-    for sequence in sequences:
+    for sequence in tqdm.tqdm(sequences):
         sequence = sequence[:-1]  # strip newline
         sequence_out_path = output_path + sequence + "/"
         sequence_img_path = davis_path + "JPEGImages/480p/" + sequence + "/"

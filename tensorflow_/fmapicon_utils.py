@@ -30,7 +30,7 @@ def execute_model(A, B, model, N=10):
             ]
             for j in range(SIDE_LENGTH)
         ]
-       for k in range(10)]
+       for k in range(N)]
     )
     return cc, grid
 
@@ -188,15 +188,14 @@ class FMAPICON_model:
         self.inner_model = make_model(.6, 90, 128)
         self.inner_model.load_weights(weights_path)
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
-        A = initial_frame[None, ::4, 215:-215:4]    
-        B = current_frame[None, ::4, 215:-215:4]
+        crop = (initial_frame.shape[1] - initial_frame.shape[0]) // 2
+        A = initial_frame[None, ::4, crop:-crop:4]    
+        B = current_frame[None, ::4, crop:-crop:4]
         
         cc, grid = execute_model(A, B, self.inner_model, N=1)
 
         channels = np.unique(initial_mask)
 
-        print(grid.shape)
         warped_mask = initial_mask[::4, 215:-215:4]
 
-        raise Exception("Gave up")
         return initial_mask
