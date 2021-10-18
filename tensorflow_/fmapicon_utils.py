@@ -3,17 +3,19 @@ import numpy as np
 import tensorflow as tf
 import os
 
-def execute_model(A, B, model):
+def execute_model(A, B, model, N=10):
     SIDE_LENGTH = 90
     FEATURE_LENGTH = 128
 
+    
+
     inner_model = model.layers[2]
 
-    F_A = tf.reshape(inner_model(A)[:10], (10, SIDE_LENGTH ** 2, FEATURE_LENGTH))
-    F_B = tf.reshape(inner_model(B)[:10], (10, SIDE_LENGTH ** 2, FEATURE_LENGTH))
+    F_A = tf.reshape(inner_model(A)[:N], (N, SIDE_LENGTH ** 2, FEATURE_LENGTH))
+    F_B = tf.reshape(inner_model(B)[:N], (N, SIDE_LENGTH ** 2, FEATURE_LENGTH))
     cc = tf.linalg.matmul(F_A, F_B, transpose_b=True)
     cc = tf.nn.softmax(cc, axis=-1)
-    cc = tf.reshape(cc, [10] + [SIDE_LENGTH] * 4)
+    cc = tf.reshape(cc, [N] + [SIDE_LENGTH] * 4)
     cc = np.array(cc)
 
 
@@ -189,7 +191,7 @@ class FMAPICON_model:
         A = initial_frame[None, ::4, 215:-215:4]    
         B = current_frame[None, ::4, 215:-215:4]
         
-        cc, grid = execute_model(A, B, model)
+        cc, grid = execute_model(A, B, self.inner_model, N=1)
 
         channels = np.unique(initial_mask)
 
