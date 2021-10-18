@@ -189,13 +189,21 @@ class FMAPICON_model:
         self.inner_model.load_weights(weights_path)
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):
         crop = (initial_frame.shape[1] - initial_frame.shape[0]) // 2
-        A = initial_frame[None, ::4, crop:-crop:4]    
-        B = current_frame[None, ::4, crop:-crop:4]
+        A = initial_frame[None, ::4, crop:-crop:4] / 255.
+        B = current_frame[None, ::4, crop:-crop:4] / 255.
         
         cc, grid = execute_model(A, B, self.inner_model, N=1)
 
-        channels = np.unique(initial_mask)
+        m = initial_mask[::4, crop:-crop:4]
+        
+        lowres_mask = m[grid[0, :, :, 1].astype(int) + 15, grid[0, :, :, 0].astype(int) + 15].transpose()
 
-        warped_mask = initial_mask[::4, 215:-215:4]
+        up_mask = np.repeat(np.repeat(lowres_mask, 4, axis=0),4, axis=1)
 
-        return initial_mask
+        out_mask = initial_mask.copy()
+
+        out_mask[15 * 4:-15 * 4, crop + 15 * 4:-crop - 15 * 4] = up_mask
+
+
+
+        return out_mask
