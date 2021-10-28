@@ -64,6 +64,26 @@ class PatchwiseDenseModel(nn.Module):
 
         return cc_a, cc_b
 
+
+# Load a tensorflow weight file into a compatible pytorch model
+def load_tensorflow_weight_file(model, path):
+    import tensorflow as tf
+    import numpy as np
+    tf_weights = np.load(path)
+    for layer in model.modules():
+        if isinstance(layer, nn.Conv2d):
+            layer.weight.data = torch.from_numpy(tf_weights[layer.weight.data.shape[0]][layer.weight.data.shape[1]][layer.weight.data.shape[2]][layer.weight.data.shape[3]])
+            layer.bias.data = torch.from_numpy(tf_weights[layer.bias.data.shape[0]][layer.bias.data.shape[1]][layer.bias.data.shape[2]][layer.bias.data.shape[3]])
+        elif isinstance(layer, nn.BatchNorm2d):
+            layer.weight.data = torch.from_numpy(tf_weights[layer.weight.data.shape[0]][layer.weight.data.shape[1]])
+            layer.bias.data = torch.from_numpy(tf_weights[layer.bias.data.shape[0]][layer.bias.data.shape[1]])
+            layer.running_mean.data = torch.from_numpy(tf_weights[layer.running_mean.data.shape[0]][layer.running_mean.data.shape[1]])
+            layer.running_var.data = torch.from_numpy(tf_weights[layer.running_var.data.shape[0]][layer.running_var.data.shape[1]])
+        elif isinstance(layer, nn.Linear):
+            layer.weight.data = torch.from_numpy(tf_weights[layer.weight.data.shape[0]][layer.weight.data.shape[1]])
+            layer.bias.data = torch.from_numpy(tf_weights[layer.bias.data.shape[0]][layer.bias.data.shape[1]])
+    return model
+
 if __name__ == '__main__':
     model = PatchwiseDenseModel().cuda()
 

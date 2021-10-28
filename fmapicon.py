@@ -1,5 +1,5 @@
 import footsteps
-import pykeops
+
 import os
 import scipy.ndimage
 import scipy.ndimage.measurements
@@ -19,8 +19,8 @@ def show(x):
     plt.imshow(x.detach().cpu())
 
 
-N = 28 * 2
-BATCH_SIZE = 32
+N = 28
+BATCH_SIZE = 16
 
 def get_dataset_mnist(split):
     ds = torch.utils.data.DataLoader(
@@ -99,7 +99,7 @@ def get_dataset_triangles(split):
     theta = np.random.random((6000, 1, 1)) * np.pi * 2
     isTriangle = np.random.random((6000, 1, 1)) > 0.5
 
-    isHollow = np.random.random((6000, 1, 1)) > 0.5
+    isHollow = np.random.random((6000, 1, 1)) > -0.5
 
     triangles = np.sqrt((x - cx) ** 2 + (y - cy) ** 2) - r * np.cos(np.pi / 3) / np.cos(
         (np.arctan2(x - cx, y - cy) + theta) % (2 * np.pi / 3) - np.pi / 3
@@ -129,8 +129,8 @@ def get_dataset_triangles(split):
     return d1, d2
 
 
-#d1_triangles, d2_triangles = get_dataset_triangles("train")
-#d1_triangles_test, d2_triangles_test = get_dataset_triangles("test")
+
+
 
 
 class RegisNetNoPad(nn.Module):
@@ -211,6 +211,18 @@ def pass_(A, B, net, optimizer, scaler):
         loss = cc_A * cc_B
         loss = torch.clamp(loss, max=0.3)
         loss = -torch.sum(loss).float() / BATCH_SIZE / (N * N)
+
+        # Compute the image similarity loss
+        image_A_vec = image_A.reshape(BATCH_SIZE, 1, N * N)
+        image_B_vec = image_B.reshape(BATCH_SIZE, 1, N * N)
+
+        warped_A = torch.matmul(cc_A, image_A_vec.transpose(1, 2))
+
+        #print(warped_A.shape, image_B_vec.shape)
+
+        similarity_loss = torch.mean((warped_A - image_B_vec.transpose(1, 2)) ** 2)
+
+        loss = loss + similarity_loss
         #scaler.scale(loss).backward()
 
         loss.backward()
@@ -275,7 +287,7 @@ def do_many_visualizations(prefix, A, B, net):
     plt.show()
     plt.clf()
 
-    reshaped = cc_A.reshape([N] * 4).detach().numpy()
+    reshaped = cc_B.reshape([N] * 4).detach().numpy()
 
     grid = np.array(
         [
@@ -318,14 +330,15 @@ if __name__ == "__main__":
     
     import footsteps
     net = RegisNetNoPad()
-
+    d1_triangles, d2_triangles = get_dataset_triangles("train")
+    d1_triangles_test, d2_triangles_test = get_dataset_triangles("test")
     A = list(d1_triangles)[0][0][:1]
     B = list(d1_triangles)[1][0][:1]
 
     do_many_visualizations("before_train", A, B, net)
 
 
-    l = train(net, d1_triangles, d2_triangles)
+    l = train(net, d1_triangles, d2_triangles, iterations=5)
 
     do_many_visualizations("after_train", A, B, net)
 
