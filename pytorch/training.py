@@ -132,6 +132,12 @@ def tallerUNet2(dimension=2):
         [[3, 64, 64, 128, 256], [64, 64, 128, 256]],
         dimension,
     )
+def tallerUNet2(dimension=2):
+    return UNet2(
+        7,
+        [[3, 64, 64, 128, 256, 512, 512, 512], [64, 64, 128, 256, 256, 512, 512]],
+        dimension,
+    )
 feature_net = tallerUNet2().cuda()
 
 
@@ -325,7 +331,8 @@ class FMAPModelWarping(nn.Module):
         #diag_v = (diag - vm[:, :, 0]).exp() * vs[:, :, 0]
         #diag_h = (diag - hm[:, :, 0]).exp() * hs[:, :, 0]
         
-        loss = torch.log(res.sum(1) + .0001).mean()
+        #loss = torch.log(res.sum(1) + .0001).mean()
+        loss = torch.clip(res.sum(1), 0.0, 0.6).mean()
         loss
 
         return loss
@@ -336,6 +343,7 @@ loss_model_2 = FMAPModelWarping(feature_net, 64)
 
 
 optimizer = torch.optim.RMSprop(feature_net.parameters(), lr=.00001)
+#optimizer = torch.optim.Adam(feature_net.parameters(), lr=.00001)
 feature_net.train()
 feature_net.cuda()
 losses = []
