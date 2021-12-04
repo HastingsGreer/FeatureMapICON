@@ -167,105 +167,11 @@ def warping(net, tensor):
     backward_grid = F.affine_grid(backward[:, :2], warped_output.shape)
     
     unwarped_output = F.grid_sample(warped_output, backward_grid)
+
     
     return unwarped_output
     
     
-
-
-
-class FMAPModel(nn.Module):
-
-    def __init__(self, net, feature_length=128):
-        super().__init__()
-        self.feature_length = feature_length
-
-        self.net = net
-
-    def forward(self, input_a, input_b):
-        feats_a = self.net(input_a.cuda())[:, :, 60:-40, 60:-40]
-        feats_b = self.net(input_b.cuda())[:, :, 60:-40, 60:-40]
-
-        feats_a, feats_b = (
-            tn.reshape([feats_a.shape[0], feats_a.shape[1], -1])
-             .transpose(1, 2).contiguous() for tn in (feats_a, feats_b)
-        )
-
-
-
-        M = torch.bmm(feats_a, feats_b.transpose(1, 2))
-        #print(M.sum())
-
-        #vs = 1 / (M.sum(1) + .0001)
-        #hs = 1 / (M.sum(2) + .0001)
-
-        #(M * vs[:, None]).sum(1) == 1
-        #(M * hs[:,:, None]).sum(2) == 1
-
-        res = (torch.softmax(M, axis=1)) * (torch.softmax(M, axis=2))
-
-        loss = torch.log(res.sum(1)).mean()
-        loss
-
-        return loss
-class FMAPModel2(nn.Module):
-
-    def __init__(self, net, feature_length=128):
-        super().__init__()
-        self.feature_length = feature_length
-
-        self.net = net
-
-    def forward(self, input_a, input_b):
-        feats_a = self.net(input_a.cuda())[:, :, 20:-20, 20:-20]
-        feats_b = self.net(input_b.cuda())[:, :, 20:-20, 20:-20]
-
-        feats_a, feats_b = (
-            tn.reshape([feats_a.shape[0], feats_a.shape[1], -1])
-             .transpose(1, 2).contiguous() for tn in (feats_a, feats_b)
-        )
-
-        l_feats_a = LazyTensor(feats_a[:, :, None, :])
-        l_feats_b = LazyTensor(feats_b[:, None, :, :])
-
-        M_unn = (l_feats_a * l_feats_b).sum(3)
-        
-        with torch.no_grad():
-            vm = M_unn.max(1)
-            hm = M_unn.max(2)
-        
-        M_v = (M_unn - vm[:, None]).exp()
-        
-        
-        
-        M_h = (M_unn - hm[:, :, None]).exp()
-        
-        
-
-        vs = 1 / (M_v.sum(1) + .0001)
-        hs = 1 / (M_h.sum(2) + .0001)
-
-        #(M * vs[:, None]).sum(1) == 1
-        #(M * hs[:,:, None]).sum(2) == 1
-        
-        #l = torch.arange(0, feats_a.shape[1]) * 1.0
-        #anti_diag = (LazyTensor(l[None, None, :]) - LazyTensor(l[None, :, None]))
-
-        res = ((M_v * LazyTensor(vs[:, None])) * (M_h * LazyTensor(hs[:, :, None])))
-        
-        #print(feats_a.shape)
-        diag = (feats_a * feats_b).sum(2)
-        #print(vs.shape, diag.shape)
-        diag_v = (diag - vm[:, :, 0]).exp() * vs[:, :, 0]
-        diag_h = (diag - hm[:, :, 0]).exp() * hs[:, :, 0]
-        
-        
-        
-
-        loss = torch.log(res.sum(1) - (diag_v * diag_h)[:, :, None]).mean()
-        loss
-
-        return loss
     
 class FMAPModelWarping(nn.Module):
 
@@ -321,16 +227,8 @@ class FMAPModelWarping(nn.Module):
         #(M * vs[:, None]).sum(1) == 1
         #(M * hs[:,:, None]).sum(2) == 1
         
-        #l = torch.arange(0, feats_a.shape[1]) * 1.0
-        #anti_diag = (LazyTensor(l[None, None, :]) - LazyTensor(l[None, :, None]))
-
         res = ((M_v * LazyTensor(vs[:, None])) * (M_h * LazyTensor(hs[:, :, None])))
         
-        #print(feats_a.shape)
-        #diag = (feats_a * feats_b).sum(2)
-        #print(vs.shape, diag.shape)
-        #diag_v = (diag - vm[:, :, 0]).exp() * vs[:, :, 0]
-        #diag_h = (diag - hm[:, :, 0]).exp() * hs[:, :, 0]
         
         loss = torch.log(res.sum(1) + .0001).mean()
         #loss = torch.clip(res.sum(1), 0.0, 0.6).mean()
@@ -344,9 +242,6 @@ if __name__ == "__main__":
 
     #feature_net.load_state_dict(torch.load("results/deeeep_warp/network00006.trch"))
     loss_model_2 = FMAPModelWarping(feature_net, 64)
-
-
-
 
     optimizer = torch.optim.RMSprop(feature_net.parameters(), lr=.00001)
     #optimizer = torch.optim.Adam(feature_net.parameters(), lr=.00001)
