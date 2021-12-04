@@ -1,4 +1,6 @@
 **.swp
+tensorflow_/results/saved_batch/
+pytorch/results
 data_storage/
 files/*
 results/*
@@ -10,3 +12,7 @@ julia/
 **/*.index*
 **/*.data*
 tensorflow/saved_models/*
+pytorch/videocache.pth
+pytorch/videocache64.pth
+homeless_notebooks/*
+bak_tensorflow/*
