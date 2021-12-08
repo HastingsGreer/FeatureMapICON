@@ -2,6 +2,7 @@ try:
     import pytorch.videoReplayFast as videoReplayFast
 except:
     import videoReplayFast
+
 import random
 import footsteps
 from pykeops.torch import LazyTensor
@@ -142,6 +143,7 @@ def tallerUNet2(dimension=2):
         dimension,
     )
 
+
 # In[4]:
 
 
@@ -169,8 +171,7 @@ def warping(net, tensor):
     unwarped_output = F.grid_sample(warped_output, backward_grid)
 
     return unwarped_output
-    
-    
+
     
 class FMAPModelWarping(nn.Module):
 
@@ -181,11 +182,13 @@ class FMAPModelWarping(nn.Module):
         self.net = net
 
     def forward(self, input_a, input_b):
+
         feats_a_h = warping(self.net, input_a.cuda())#[:, :, 20:-20, 20:-20]
         feats_b_h = warping(self.net, input_b.cuda())#[:, :, 20:-20, 20:-20]
         
         feats_a_v = warping(self.net, input_a.cuda())#[:, :, 20:-20, 20:-20]
         feats_b_v = warping(self.net, input_b.cuda())#[:, :, 20:-20, 20:-20]
+
 
         feats_a_h, feats_b_h = (
             tn.reshape([feats_a_h.shape[0], feats_a_h.shape[1], -1])
@@ -231,6 +234,7 @@ class FMAPModelWarping(nn.Module):
         
         loss = torch.log(res.sum(1) + .0001).mean()
         #loss = torch.clip(res.sum(1), 0.0, 0.6).mean()
+
         loss
 
         return loss
@@ -261,5 +265,3 @@ if __name__ == "__main__":
             print(loss)
             losses.append(loss.item())
         
-
-
