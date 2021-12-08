@@ -1,9 +1,0 @@
-Command:
-mannequin_dense.py
-System:
-biag-gpu4.cs.unc.edu
-Python:
-/playpen-raid1/tgreer/anaconda3/envs/tensorflow/bin/python
-Git Hash:
-c779598
-Uncommitted changes:

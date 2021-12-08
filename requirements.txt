@@ -4,7 +4,6 @@ jupyter
 numpy
 torchvision
 torch
-tensorflow
 matplotlib
 footsteps
 git+git://github.com/davisvideochallenge/davis2017-evaluation
