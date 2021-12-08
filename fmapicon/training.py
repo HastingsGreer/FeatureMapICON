@@ -1,12 +1,11 @@
 try:
-    import pytorch.videoReplayFast as videoReplayFast
+    import pytorch.videoReplayFast as threaded_video_dataset
 except:
-    import videoReplayFast
+    import threaded_video_dataset
 
 import random
 import footsteps
 from pykeops.torch import LazyTensor
-gen = videoReplayFast.threadedProvide()
 
 
 from torch import nn
@@ -124,28 +123,13 @@ class UNet2(nn.Module):
             x = torch.cat([x, skips[depth]], 1)
         x = self.lastConv(x)
         return x
-def tallerUNet2(dimension=2):
-    return UNet2(
-        7,
-        [[3, 16, 32, 64, 256, 512, 512, 512], [64, 64, 64, 128, 256, 512, 512]],
-        dimension,
-    )
-def tallerUNet2(dimension=2):
-    return UNet2(
-        4,
-        [[3, 64, 64, 128, 256], [64, 64, 128, 256]],
-        dimension,
-    )
+
 def tallerUNet2(dimension=2):
     return UNet2(
         7,
         [[3, 64, 64, 128, 256, 512, 512, 512], [64, 64, 128, 256, 256, 512, 512]],
         dimension,
     )
-
-
-# In[4]:
-
 
 def warping(net, tensor):
     identity = torch.Tensor([[[1., 0, 0], [0, 1, 0], [0, 0, 1]]]).cuda()
@@ -240,6 +224,8 @@ class FMAPModelWarping(nn.Module):
         return loss
 
 if __name__ == "__main__":
+
+    gen = threaded_video_dataset.threadedProvide()
     feature_net = tallerUNet2().cuda()
 
 
