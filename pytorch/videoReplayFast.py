@@ -16,10 +16,15 @@ try:
     available_videos = os.listdir(video_dir)
     available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
 except:
-    print("falling back to slow disk")
-    video_dir = "/playpen-raid2/tgreer/Mannequin_Challenge/MannequinChallenge/train/"
-    available_videos = os.listdir(video_dir)
-    available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
+    try:
+        video_dir = "/playpen1/tgreer/MannequinChallenge/train_512/"
+        available_videos = os.listdir(video_dir)
+        available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
+    except:
+        print("falling back to slow disk")
+        video_dir = "/playpen-raid2/tgreer/Mannequin_Challenge/MannequinChallenge/train/"
+        available_videos = os.listdir(video_dir)
+        available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
 def framePacket():       
 
     max_gap = 30
@@ -61,8 +66,8 @@ def grabShufflePutStep(inp, out):
         bigPacket = [inp.get() for _ in range(SHUFFLE_SIZE)]
         x = torch.cat(bigPacket, 0)
         indices = torch.randperm(SHUFFLE_SIZE * 64)
-        for i in range(SHUFFLE_SIZE * 16):
-            out.put(x[indices[i * 4 : (i + 1) * 4]])
+        for i in range(SHUFFLE_SIZE):
+            out.put(x[indices[i * 64 : (i + 1) * 64]])
 
 def grabShufflePut(inp, out):
     while True:
@@ -75,8 +80,11 @@ def threadedProvide():
         packetProcesses[i] = multiprocessing.Process(target=putFramePacketsOnQueue, args=(packetQueue,), daemon=True)
         packetProcesses[i].start()
     shuffledQueue = multiprocessing.Queue(SHUFFLE_SIZE // 6)
+    cached_batches = torch.load("videocache64.pth")
     process = multiprocessing.Process(target = grabShufflePut, args = (packetQueue, shuffledQueue), daemon=True)
     process.start()
+    for c in cached_batches:
+        yield c
     while True:
         yield shuffledQueue.get().clone()
 

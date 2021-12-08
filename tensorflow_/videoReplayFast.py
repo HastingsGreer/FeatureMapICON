@@ -16,10 +16,15 @@ try:
     available_videos = os.listdir(video_dir)
     available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
 except:
-    print("falling back to slow disk")
-    video_dir = "/playpen-raid2/tgreer/Mannequin_Challenge/MannequinChallenge/train/"
-    available_videos = os.listdir(video_dir)
-    available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
+    try:
+        video_dir = "/playpen1/tgreer/MannequinChallenge/train_512/"
+        available_videos = os.listdir(video_dir)
+        available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
+    except:
+        print("falling back to slow disk")
+        video_dir = "/playpen-raid2/tgreer/Mannequin_Challenge/MannequinChallenge/train/"
+        available_videos = os.listdir(video_dir)
+        available_videos = [x for x in available_videos if ("mkv" in x) or ("mp4" in x)]
 def framePacket():       
 
     max_gap = 30

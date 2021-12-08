@@ -11,7 +11,8 @@ SHUFFLE_SIZE = 600
 
 BATCH_SIZE=64
 
-video_dir = "/playpen-nvme/tgreer/DashCamVideos/"
+#video_dir = "/playpen-nvme/tgreer/DashCamVideos/"
+video_dir = "/playpen1/tgreer/IdiotsInCars/data256/"
 def framePacket():       
 
     available_videos = os.listdir(video_dir)
