@@ -168,7 +168,6 @@ def warping(net, tensor):
     
     unwarped_output = F.grid_sample(warped_output, backward_grid)
 
-    
     return unwarped_output
     
     
