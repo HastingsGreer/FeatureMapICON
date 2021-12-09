@@ -1,7 +1,3 @@
-try:
-    import pytorch.videoReplayFast as threaded_video_dataset
-except:
-    import threaded_video_dataset
 
 import random
 import footsteps
@@ -225,6 +221,7 @@ class FMAPModelWarping(nn.Module):
 
 if __name__ == "__main__":
 
+    import fmapicon.threaded_video_dataset as threaded_video_dataset
     gen = threaded_video_dataset.threadedProvide()
     feature_net = tallerUNet2().cuda()
 
