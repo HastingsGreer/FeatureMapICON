@@ -6,3 +6,4 @@ torchvision
 torch
 matplotlib
 footsteps
+pykeops
