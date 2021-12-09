@@ -5,7 +5,7 @@ class TestImports(unittest.TestCase):
     def test_imports_CPU(self):
         import fmapicon
         import fmapicon.training
-        import fmapicon.threaded_video_dataset
+        #import fmapicon.threaded_video_dataset
     def test_requirements_match_cfg_CPU(self):
         from inspect import getsourcefile
         import os.path as path, sys
