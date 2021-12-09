@@ -1,7 +1,7 @@
 mkdir data_storage
 cd data_storage
 
-if stat ~/.davis.zip 
+if [[ -f ~/.davis.zip ]]
     then
         echo "used cached dataset"
         cp ~/.davis.zip DAVIS-2017-trainval-480p.zip
