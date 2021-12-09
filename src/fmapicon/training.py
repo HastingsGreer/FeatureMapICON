@@ -1,7 +1,4 @@
-try:
-    import pytorch.videoReplayFast as threaded_video_dataset
-except:
-    import threaded_video_dataset
+import fmapicon.threaded_video_dataset as threaded_video_dataset
 
 import random
 import footsteps
