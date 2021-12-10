@@ -34,6 +34,16 @@ class Residual(nn.Module):
         y = F.relu(self.bn2(y))
         y = self.conv2(y)
         return y + x
+class NormScaleFeature(nn.Module):
+
+    def __init__(self, init_value=1):
+         super().__init__()
+         self.scale = nn.Parameter(torch.FloatTensor([init_value]))
+
+    def forward(self, input):
+        magnitudes = .000001 + torch.sqrt(torch.sum(input**2, axis=1, keepdims=True))
+        output = self.scale * input / magnitudes
+        return output
 
 
 
@@ -89,6 +99,7 @@ class UNet2(nn.Module):
                 Residual(up_channels_out[depth])
             )
         self.lastConv = self.Conv(67, 64, kernel_size=3, padding=1)
+        self.outNorm = NormScaleFeature(12)
         #torch.nn.init.zeros_(self.lastConv.weight)
         #torch.nn.init.zeros_(self.lastConv.bias)
 
@@ -118,6 +129,7 @@ class UNet2(nn.Module):
             x = x[:, :, : skips[depth].size()[2], : skips[depth].size()[3]]
             x = torch.cat([x, skips[depth]], 1)
         x = self.lastConv(x)
+        x = self.outNorm(x)
         return x
 
 def tallerUNet2(dimension=2):
@@ -229,8 +241,8 @@ if __name__ == "__main__":
     #feature_net.load_state_dict(torch.load("results/deeeep_warp/network00006.trch"))
     loss_model_2 = FMAPModelWarping(feature_net, 64)
 
-    optimizer = torch.optim.RMSprop(feature_net.parameters(), lr=.00001)
-    #optimizer = torch.optim.Adam(feature_net.parameters(), lr=.00001)
+    optimizer = torch.optim.RMSprop(feature_net.parameters(), lr=.0001)
+    #optimizer = torch.optim.Adam(feature_net.parameters(), lr=.0001)
     feature_net.train()
     feature_net.cuda()
     losses = []
@@ -240,11 +252,11 @@ if __name__ == "__main__":
         torch.save(optimizer.state_dict(), footsteps.output_dir + f"opt{i:05}.trch")
         torch.save(losses, footsteps.output_dir + f"loss{i:05}.trch")
         
-        for j in range(1000):
-            q = next(gen) / 255
+        for j in range(100):
+            q = next(gen)[:32] / 255
             loss = -loss_model_2(q[:, :3], q[:, 3:])
             loss.backward()
             optimizer.step()
-            print(loss)
+            print(f"Loss: {loss.item()}, scale: {feature_net.outNorm.scale.data.item()}")
             losses.append(loss.item())
         
