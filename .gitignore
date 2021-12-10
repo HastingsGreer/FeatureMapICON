@@ -1,4 +1,5 @@
 **.swp
+*cache64*
 test/network*.trch
 data_storage/
 files/*
