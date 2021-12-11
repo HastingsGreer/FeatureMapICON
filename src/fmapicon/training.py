@@ -161,6 +161,8 @@ def warping(net, tensor):
     backward_grid = F.affine_grid(backward[:, :2], warped_output.shape)
     
     unwarped_output = F.grid_sample(warped_output, backward_grid)
+    #magnitudes = .000001 + torch.sqrt(torch.sum(unwarped_output**2, axis=1, keepdims=True))
+    #unwarped_output = 12 * unwarped_output / magnitudes
 
     return unwarped_output
 
@@ -256,7 +258,13 @@ if __name__ == "__main__":
             q = next(gen)[:32] / 255
             loss = -loss_model_2(q[:, :3], q[:, 3:])
             loss.backward()
+            parameters = feature_net.parameters()
+            parameters = [p for p in parameters if p.grad is not None]
+            total_norm = torch.norm(torch.stack([torch.norm(p.grad.detach(), 2) for p in parameters]), 2)
+            
+            torch.nn.utils.clip_grad_norm_(feature_net.parameters(), 20, 2)
+
             optimizer.step()
-            print(f"Loss: {loss.item()}, scale: {feature_net.outNorm.scale.data.item()}")
-            losses.append(loss.item())
+            print(f"Loss: {loss.item()}, scale: {feature_net.outNorm.scale.data.item()}, grad norm: {total_norm.item()}")
+            losses.append({"loss":loss.item(), "grad_norm":total_norm.item()})
         
