@@ -28,8 +28,13 @@ except:
 """
 
 import glob
-
+"""
 video_dir = "/playpen1/tgreer/Kinetics/kinetics_256/*/*.mp4"
+cache_file = "kinetics_cache64.pth"
+"""
+video_dir = "/playpen1/tgreer/MannequinChallenge/train_512/*.mp4"
+cache_file = "videocache64.pth"
+
 available_videos = glob.glob(video_dir)
 def framePacket():       
 
@@ -86,8 +91,7 @@ def threadedProvide():
         packetProcesses[i] = multiprocessing.Process(target=putFramePacketsOnQueue, args=(packetQueue,), daemon=True)
         packetProcesses[i].start()
     shuffledQueue = multiprocessing.Queue(SHUFFLE_SIZE // 6)
-    #cached_batches = torch.load("videocache64.pth")
-    cached_batches = torch.load("kinetics_cache64.pth")
+    cached_batches = torch.load(cache_file)
     process = multiprocessing.Process(target = grabShufflePut, args = (packetQueue, shuffledQueue), daemon=True)
     process.start()
     for c in cached_batches:
