@@ -1,4 +1,5 @@
 scipy
+tqdm
 opencv-python-headless
 jupyter
 numpy
