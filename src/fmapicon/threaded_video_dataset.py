@@ -28,13 +28,13 @@ except:
 """
 
 import glob
-"""
+
 video_dir = "/playpen1/tgreer/Kinetics/kinetics_256/*/*.mp4"
 cache_file = "kinetics_cache64.pth"
 """
 video_dir = "/playpen1/tgreer/MannequinChallenge/train_512/*.mp4"
 cache_file = "videocache64.pth"
-
+"""
 available_videos = glob.glob(video_dir)
 def framePacket():       
 

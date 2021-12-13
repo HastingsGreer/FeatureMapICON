@@ -98,7 +98,7 @@ class UNet2(nn.Module):
             self.residues.append(
                 Residual(up_channels_out[depth])
             )
-        self.lastConv = self.Conv(67, 64, kernel_size=3, padding=1)
+        self.lastConv = self.Conv(128 + 64, 128, kernel_size=3, padding=1)
         self.outNorm = NormScaleFeature(12)
         #torch.nn.init.zeros_(self.lastConv.weight)
         #torch.nn.init.zeros_(self.lastConv.bias)
@@ -114,7 +114,7 @@ class UNet2(nn.Module):
             )
             y = F.layer_norm
 
-        for depth in reversed(range(self.num_layers)):
+        for depth in list(reversed(range(self.num_layers)))[:-1]:
             y = self.upConvs[depth](F.leaky_relu(x))
             #x = y + F.interpolate(
             #    pad_or_crop(x, y.size(), self.dimension),
@@ -135,7 +135,7 @@ class UNet2(nn.Module):
 def tallerUNet2(dimension=2):
     return UNet2(
         7,
-        [[3, 64, 64, 128, 256, 512, 512, 512], [64, 64, 128, 256, 256, 512, 512]],
+        [[3, 64, 64, 128, 256, 512, 512, 512], [128, 128, 128, 256, 256, 512, 512]],
         dimension,
     )
 
