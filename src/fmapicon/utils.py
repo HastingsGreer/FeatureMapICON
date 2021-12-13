@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import fmapicon.training
+import fmapicon.models
 
 import matplotlib.pyplot as plt
 import torch.nn as nn
