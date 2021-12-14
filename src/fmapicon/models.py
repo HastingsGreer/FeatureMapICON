@@ -42,9 +42,11 @@ class NormScaleFeature(nn.Module):
 
 
 class UNet2(nn.Module):
-    def __init__(self, num_layers, channels, dimension, input_channels=1):
+    def __init__(self, num_layers, channels, dimension, input_channels=1, half_res_output=False, normalize_output=True):
         super(UNet2, self).__init__()
         self.dimension = dimension
+        self.half_res_output = half_res_output
+        self.normalize_output = normalize_output
         if dimension == 2:
             self.BatchNorm = nn.BatchNorm2d
             self.Conv = nn.Conv2d
@@ -92,8 +94,12 @@ class UNet2(nn.Module):
             self.residues.append(
                 Residual(up_channels_out[depth])
             )
-        self.lastConv = self.Conv(128 + 64, 128, kernel_size=3, padding=1)
-        self.outNorm = NormScaleFeature(12)
+        if half_res_output:
+            self.lastConv = self.Conv(128 + 64, 128, kernel_size=3, padding=1)
+        else:
+            self.lastConv = self.Conv(up_channels_out[0] + down_channels[0], up_channels_out[0], kernel_size=3, padding=1)
+        if self.normalize_output:
+            self.outNorm = NormScaleFeature(12)
         #torch.nn.init.zeros_(self.lastConv.weight)
         #torch.nn.init.zeros_(self.lastConv.bias)
 
@@ -108,7 +114,11 @@ class UNet2(nn.Module):
             )
             y = F.layer_norm
 
-        for depth in list(reversed(range(self.num_layers)))[:-1]:
+        if self.half_res_output:
+            depths = list(reversed(range(self.num_layers)))[:-1]
+        else:
+            depths = list(reversed(range(self.num_layers)))
+        for depth in depths:
             y = self.upConvs[depth](F.leaky_relu(x))
             #x = y + F.interpolate(
             #    pad_or_crop(x, y.size(), self.dimension),
@@ -123,12 +133,19 @@ class UNet2(nn.Module):
             x = x[:, :, : skips[depth].size()[2], : skips[depth].size()[3]]
             x = torch.cat([x, skips[depth]], 1)
         x = self.lastConv(x)
-        x = self.outNorm(x)
+        if self.normalize_output:
+            x = self.outNorm(x)
         return x
 
-def tallerUNet2(dimension=2):
+def tallerUNet64(dimension=2, normalize_output=True):
+    return UNet2(
+        7,
+        [[3, 64, 64, 128, 256, 512, 512, 512], [64, 64, 128, 256, 256, 512, 512]],
+        dimension, normalize_output=normalize_output
+    )
+def tallerUNet128(dimension=2, normalize_output=True):
     return UNet2(
         7,
         [[3, 64, 64, 128, 256, 512, 512, 512], [128, 128, 128, 256, 256, 512, 512]],
-        dimension,
+        dimension, normalize_output=normalize_output
     )

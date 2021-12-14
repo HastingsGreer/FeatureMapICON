@@ -47,7 +47,7 @@ def execute_model(A, B, model):
 
 class FmapICONSegmentationModel:
     def __init__(self, weights_path):
-        self.inner_model = fmapicon.training.tallerUNet2().cuda()
+        self.inner_model = fmapicon.models.tallerUNet64(normalize_output=False).cuda()
         self.inner_model.load_state_dict(torch.load(weights_path))
         
     def __call__(self, initial_frame, initial_mask, prev_frame, prev_mask, current_frame):

@@ -2,12 +2,15 @@
 import random
 import footsteps
 from pykeops.torch import LazyTensor
+
+
 from torch import nn
 import torch
 import torch.nn.functional as F
 import numpy as np
 
-from fmapicon.models import tallerUNet1
+from fmapicon.models import tallerUNet64
+
 
 def warping(net, tensor):
     identity = torch.Tensor([[[1., 0, 0], [0, 1, 0], [0, 0, 1]]]).cuda()
