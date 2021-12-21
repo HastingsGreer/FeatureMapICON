@@ -39,14 +39,35 @@ class NormScaleFeature(nn.Module):
         output = self.scale * input / magnitudes
         return output
 
+class PixelCenter2D(nn.Module):
+    """
+    make sure that each pixel location has a mean of zero across the batch. At train time, this is done by
+    subtracting the mean across the batch from each pixel. At test time, the running mean is subtracted
+    from each pixel before it is returned. Also, track the running mean during training
+    """
+    def __init__(self, channels, size):
+        super(PixelCenter2D, self).__init__()
+        self.register_buffer('mean', torch.zeros(1, channels, size, size))
+
+    def forward(self, x):
+        if self.training:
+            batch_mean = torch.mean(x, axis=0, keepdim=True)
+            out = x - batch_mean
+            with torch.no_grad():
+                self.mean = .9 * self.mean + .1 * batch_mean
+        else:
+            out = x - self.mean
+        return out
+
 
 
 class UNet2(nn.Module):
-    def __init__(self, num_layers, channels, dimension, input_channels=1, half_res_output=False, normalize_output=True):
+    def __init__(self, num_layers, channels, dimension, input_channels=1, half_res_output=False, normalize_output=True, normalize_pixels=True):
         super(UNet2, self).__init__()
         self.dimension = dimension
         self.half_res_output = half_res_output
         self.normalize_output = normalize_output
+        self.normalize_pixels = normalize_pixels
         if dimension == 2:
             self.BatchNorm = nn.BatchNorm2d
             self.Conv = nn.Conv2d
@@ -100,6 +121,8 @@ class UNet2(nn.Module):
             self.lastConv = self.Conv(up_channels_out[0] + down_channels[0], up_channels_out[0], kernel_size=3, padding=1)
         if self.normalize_output:
             self.outNorm = NormScaleFeature(12)
+        if self.normalize_pixels:
+            self.pix_norm = PixelCenter2D(64, 120)
         #torch.nn.init.zeros_(self.lastConv.weight)
         #torch.nn.init.zeros_(self.lastConv.bias)
 
@@ -127,15 +150,28 @@ class UNet2(nn.Module):
             #    align_corners=False,
             #)
             y = self.residues[depth](y)
-            # x = self.batchNorms[depth](x)
+            y = self.batchNorms[depth](y)
             x = y
 
             x = x[:, :, : skips[depth].size()[2], : skips[depth].size()[3]]
             x = torch.cat([x, skips[depth]], 1)
         x = self.lastConv(x)
+
+        # do pixelwise centering
+        if self.normalize_pixels:
+            x = self.pix_norm(x)
         if self.normalize_output:
             x = self.outNorm(x)
+
         return x
+
+
+def tallUNet64(dimension=2, normalize_output=True):
+    return UNet2(
+        5,
+        [[3, 64, 64, 128, 256, 512 ], [64, 64, 128, 256, 256 ]],
+        dimension, normalize_output=normalize_output
+    )
 
 def tallerUNet64(dimension=2, normalize_output=True):
     return UNet2(

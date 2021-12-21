@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from fmapicon.models import tallerUNet64
-
+import fmapicon.models as models
 
 def warping(net, tensor):
     identity = torch.Tensor([[[1., 0, 0], [0, 1, 0], [0, 0, 1]]]).cuda()
@@ -25,7 +25,12 @@ def warping(net, tensor):
         forward, backward = backward, forward
 
     forward_grid = F.affine_grid(forward[:, :2], tensor[:, :3].shape)
-    
+   
+    #Add some random rolling
+    u_roll = random.randint(0, 120)
+    v_roll = random.randint(0, 120)
+
+    tensor = torch.roll(tensor, (u_roll, v_roll), (2, 3))
     
     warped_input = F.grid_sample(tensor, forward_grid)
     
@@ -36,6 +41,8 @@ def warping(net, tensor):
     unwarped_output = F.grid_sample(warped_output, backward_grid)
     #magnitudes = .000001 + torch.sqrt(torch.sum(unwarped_output**2, axis=1, keepdims=True))
     #unwarped_output = 12 * unwarped_output / magnitudes
+
+    unwarped_output = torch.roll(unwarped_output, (-u_roll, -v_roll), (2, 3))
 
     return unwarped_output
 
@@ -73,20 +80,20 @@ class FMAPModelWarping(nn.Module):
         l_feats_a_v = LazyTensor(feats_a_v[:, :, None, :])
         l_feats_b_v = LazyTensor(feats_b_v[:, None, :, :])
 
-        M_unn_h = (l_feats_a_h * l_feats_b_h).sum(3)
-        M_unn_v = (l_feats_a_v * l_feats_b_v).sum(3)
+        M_unnormalized_h = (l_feats_a_h * l_feats_b_h).sum(3)
+        M_unnormalized_v = (l_feats_a_v * l_feats_b_v).sum(3)
         
         with torch.no_grad():
-            vm = M_unn_v.max(1)
-            hm = M_unn_h.max(2)
+            vmax = M_unnormalized_v.max(1)
+            hmax = M_unnormalized_h.max(2)
         
-        M_v = (M_unn_v - vm[:, None]).exp()
+        M_v = (M_unnormalized_v - vmax[:, None]).exp()
         
         #print(M_v.max(1))
         
         
         
-        M_h = (M_unn_h - hm[:, :, None]).exp()
+        M_h = (M_unnormalized_h - hmax[:, :, None]).exp()
         
         
 
@@ -110,14 +117,19 @@ if __name__ == "__main__":
 
     import fmapicon.threaded_video_dataset as threaded_video_dataset
     gen = threaded_video_dataset.threadedProvide()
-    feature_net = tallerUNet2().cuda()
+    feature_net = models.tallUNet64().cuda()
 
 
-    #feature_net.load_state_dict(torch.load("results/deeeep_warp/network00006.trch"))
+    #stat = torch.load("results/pixelwise_norm_7/network00098.trch")
+    #stat["pix_norm.mean"] = torch.zeros(1, 64, 120, 120)
+    #feature_net.load_state_dict(stat)
+
     loss_model_2 = FMAPModelWarping(feature_net, 64)
 
     optimizer = torch.optim.RMSprop(feature_net.parameters(), lr=.0001)
     #optimizer = torch.optim.Adam(feature_net.parameters(), lr=.0001)
+    optimizer.load_state_dict(torch.load("results/pixelwise_norm_7/opt00098.trch"))
+
     feature_net.train()
     feature_net.cuda()
     losses = []
@@ -128,7 +140,7 @@ if __name__ == "__main__":
         torch.save(losses, footsteps.output_dir + f"loss{i:05}.trch")
         
         for j in range(100):
-            q = next(gen)[:32] / 255
+            q = next(gen)[:] / 255
             loss = -loss_model_2(q[:, :3], q[:, 3:])
             loss.backward()
             parameters = feature_net.parameters()
