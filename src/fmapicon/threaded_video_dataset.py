@@ -7,7 +7,7 @@ import torch
 #import torch.multiprocessing as multiprocessing
 import multiprocessing
 
-SHUFFLE_SIZE = 600
+SHUFFLE_SIZE = 3600
 
 BATCH_SIZE=64
 """
@@ -33,8 +33,10 @@ video_dir = "/playpen1/tgreer/Kinetics/kinetics_256/*/*.mp4"
 cache_file = "kinetics_cache64.pth"
 video_dir = "/playpen1/tgreer/MannequinChallenge/train_512/*.mp4"
 cache_file = "videocache64.pth"
-"""
+
 video_dir = "/playpen-nvme/tgreer/Kinetics/kinetics_256/*/*.mp4"
+"""
+video_dir= "/playpen-ssd/tgreer/Kinetics/kinetics_256/*/*.mp4"
 cache_file = "kinetics_cache64.pth"
 available_videos = glob.glob(video_dir)
 def framePacket():       
