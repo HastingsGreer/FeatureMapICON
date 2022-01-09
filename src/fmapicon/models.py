@@ -172,18 +172,25 @@ def shortUNet64(dimension=2, normalize_output=True, normalize_pixels=True):
         [[3, 64, 64, 128, 256 ], [64, 64, 128, 512]],
         dimension, normalize_output=normalize_output, normalize_pixels=normalize_pixels
     )
-def tallUNet64(dimension=2, normalize_output=True):
+def shortUNet64(dimension=2, normalize_output=True, normalize_pixels=True):
+    return UNet2(
+        4,
+        [[3, 64, 64, 128, 256 ], [64, 64, 128, 512]],
+        dimension, normalize_output=normalize_output, normalize_pixels=normalize_pixels
+    )
+def tallUNet64(dimension=2, normalize_output=True, normalize_pixels=True):
     return UNet2(
         5,
         [[3, 64, 64, 128, 256, 512 ], [64, 64, 128, 256, 256 ]],
-        dimension, normalize_output=normalize_output
+        dimension, normalize_output=normalize_output, normalize_pixels=normalize_pixels
+
     )
 
-def tallerUNet64(dimension=2, normalize_output=True):
+def tallerUNet64(dimension=2, normalize_output=True, normalize_pixels=True):
     return UNet2(
         7,
         [[3, 64, 64, 128, 256, 512, 512, 512], [64, 64, 128, 256, 256, 512, 512]],
-        dimension, normalize_output=normalize_output
+        dimension, normalize_output=normalize_output, normalize_pixels = normalize_pixels
     )
 def tallerUNet128(dimension=2, normalize_output=True):
     return UNet2(
